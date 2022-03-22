@@ -12,28 +12,77 @@
 ;(function () {
   'use script'
 
+  /** @type {HTMLDivElement} */
+  let elSecondary
+  /** @type {HTMLDivElement} */
+  let elPanels
+  /** @type {HTMLDivElement} */
+  let elRelated
+
+  /**
+   *
+   * @param {boolean} makeHidden
+   */
+  function doToggle(makeHidden) {
+    elSecondary = document.querySelector('#secondary')
+    if (!elSecondary) return
+
+    elPanels = document.querySelector('#panels')
+    elRelated = document.querySelector('#related')
+
+    /**
+     *
+     * @param {HTMLDivElement} el
+     */
+    const toggleOn = (el) => {
+      if (makeHidden) {
+        el.style.display = 'block'
+      }
+      el.sytle.display = el.style.display === 'none' ? 'block' : 'none'
+    }
+
+    if (
+      elPanels &&
+      elRelated &&
+      elPanels.querySelector(
+        '[visibility="ENGAGEMENT_PANEL_VISIBILITY_EXPANDED"]'
+      )
+    ) {
+      toggleOn(elRelated)
+    } else {
+      toggleOn(elSecondary)
+    }
+  }
+
   window.addEventListener('keypress', (ev) => {
     if (ev.key !== 's') return
 
-    const el = document.querySelector('#secondary')
-    if (!el) return
-
     const target = /** @type {HTMLElement} */ (ev.target)
 
-    if (['INPUT', 'TEXTAREA'].includes(target.tagName.toLocaleUpperCase()))
+    if (['INPUT', 'TEXTAREA'].includes(target.tagName.toLocaleUpperCase())) {
       return
+    }
 
     if (target.hasAttribute('contenteditable')) return
 
-    el.style.display = el.style.display === 'none' ? 'block' : 'none'
+    doToggle()
   })
 
   const beginObserver = new MutationObserver(() => {
-    const el = document.querySelector('#secondary')
-    if (!el) return
+    elSecondary = document.querySelector('#secondary')
+    if (!elSecondary) return
 
-    el.style.display = 'none'
+    doToggle(true)
+
     beginObserver.disconnect()
+
+    new MutationObserver(() => {
+      doToggle()
+      doToggle()
+    }).observe(document.querySelector('.ytp-size-button'), {
+      childList: true,
+      subtree: true
+    })
   })
 
   beginObserver.observe(document.body, {
