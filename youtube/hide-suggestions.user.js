@@ -19,11 +19,21 @@
   /** @type {HTMLDivElement} */
   let elRelated
 
+  let hasExpanded = false
+
+  const getExpanded = () => {
+    if (!elPanels) return false
+    hasExpanded = elPanels.querySelector(
+      '[visibility="ENGAGEMENT_PANEL_VISIBILITY_EXPANDED"]'
+    )
+    return hasExpanded
+  }
+
   /**
    *
-   * @param {boolean} makeHidden
+   * @param {string} [dstStyle]
    */
-  function doToggle(makeHidden) {
+  function doToggle(dstStyle) {
     elSecondary = document.querySelector('#secondary')
     if (!elSecondary) return
 
@@ -35,19 +45,14 @@
      * @param {HTMLDivElement} el
      */
     const toggleOn = (el) => {
-      if (makeHidden) {
-        el.style.display = 'block'
+      if (dstStyle) {
+        el.style.display = dstStyle
+        return
       }
-      el.sytle.display = el.style.display === 'none' ? 'block' : 'none'
+      el.style.display = el.style.display === 'none' ? 'block' : 'none'
     }
 
-    if (
-      elPanels &&
-      elRelated &&
-      elPanels.querySelector(
-        '[visibility="ENGAGEMENT_PANEL_VISIBILITY_EXPANDED"]'
-      )
-    ) {
+    if (elPanels && elRelated && getExpanded()) {
       toggleOn(elRelated)
     } else {
       toggleOn(elSecondary)
@@ -72,14 +77,23 @@
     elSecondary = document.querySelector('#secondary')
     if (!elSecondary) return
 
-    doToggle(true)
+    doToggle('none')
 
     beginObserver.disconnect()
 
-    new MutationObserver(() => {
-      doToggle()
-      doToggle()
-    }).observe(document.querySelector('.ytp-size-button'), {
+    const obs = new MutationObserver(() => {
+      if (hasExpanded !== getExpanded()) {
+        doToggle()
+        doToggle()
+      }
+    })
+
+    obs.observe(document.querySelector('.ytp-size-button'), {
+      childList: true,
+      subtree: true
+    })
+
+    obs.observe(document.querySelector('#panels'), {
       childList: true,
       subtree: true
     })
